@@ -4,8 +4,8 @@ from parser import Parser
 
 
 def on_startup():
-    Parser().run()
-
+    # Parser().run()
+    pass
 
 if __name__ == '__main__':
     from aiogram.utils import executor

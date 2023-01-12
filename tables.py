@@ -1,4 +1,5 @@
 import config
+from database.tools import DBTools
 from database.utils import connect_database
 
 
@@ -22,7 +23,7 @@ class InitDB:
             admin_id INTEGER NOT NULL UNIQUE,
             user_id INTEGER REFERENCES users(id),
             status VARCHAR(7) NOT NULL DEFAULT 'ADMIN' 
-            CHECK (status in ('ADMIN', 'OWNER'))
+            CHECK (status in ('ADMIN', 'CREATOR'))
             
             
         )""")
@@ -37,16 +38,19 @@ class InitDB:
     def __create_admin_codes_table(self):
         self.__cursor.execute("""CREATE TABLE IF NOT EXISTS admin_codes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            code VARCHAR(10) NOT NULL UNIQUE,
+            code VARCHAR(11) NOT NULL UNIQUE,
             status VARCHAR(7) NOT NULL DEFAULT 'ADMIN'
+            CHECK (status in ('ADMIN', 'CREATOR'))
         
         )""")
+
 
     def init(self):
         self.__create_users_table()
         self.__create_admins_table()
         self.__create_factors_table()
         self.__create_admin_codes_table()
+        DBTools().admin_codes_tools.generate_admin_code(status='CREATOR')
 
 
 if __name__ == '__main__':
