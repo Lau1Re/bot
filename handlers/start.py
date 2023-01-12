@@ -61,7 +61,7 @@ async def registered_user_start_with_deeplink(message: types.Message):
             DBTools().admin_tools.register_admin(message.from_user.id,
                                                  user_id=user_id,
                                                  status=admin_status)
-            await message.answer(f'Ты зарегистрирован как админ\nПрава: {admin_status}')
+            await message.answer(f'Ты был успешно зарегистрирован как админ\nПрава: {admin_status}')
             DBTools().admin_codes_tools.delete_code(code)
     else:
         print(args)
@@ -109,3 +109,8 @@ async def creator_generate_code(message: types.Message):
     await message.answer(f'Сгенерирован <b>новый код:</b> <code>{code}</code>'
                          f'\nАктивировать можно по ссылке:'
                          f'\nt.me/{bot_username}?start={code}')
+
+
+@dp.message_handler(commands=['generate'])
+async def creator_generate_code(message: types.Message):
+    await message.answer('У вас нет доступа к данной команде. Обратитесь к @JessCodes чтобы заполучить доступ')
