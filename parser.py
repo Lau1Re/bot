@@ -3,20 +3,11 @@ import os
 import zipfile
 
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from fake_useragent import UserAgent
 from selenium import webdriver
-from multiprocessing import Pool
-from selenium.webdriver import Chrome, ChromeOptions
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-load_dotenv()
-
-PROXY_HOST = os.getenv('PROXY_HOST')  # rotating proxy or host
-PROXY_PORT = os.getenv('PROXY_PORT')
-PROXY_USER = os.getenv('PROXY_LOGIN')
-PROXY_PASS = os.getenv('PROXY_PASSWORD')
+from config import PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS
 
 manifest_json = """
 {
@@ -95,84 +86,46 @@ def get_chromedriver(use_proxy=False, user_agent=None, headless=False, driver_pa
 class Parser:
     def __init__(self):
         self.user_agent = UserAgent()
-        self.driver, self.options = get_chromedriver(use_proxy=True)
-        self.driver2, self.options2 = get_chromedriver(use_proxy=True, driver_path_name='other/chromedriver')
+        self.driver, self.options = get_chromedriver(use_proxy=True, user_agent=self.user_agent.random)
 
-        self.data1 = {"url": 'https://lucky-jet-b.1play.one/?exitUrl=null&language=ru&b=demo',
-                      'driver': self.driver,
-                      'proccess': 'LUCKY JET:',
-                      "selenium_class": 'sc-iTFTee',
-                      'soup_tag': 'div',
-                      'soup_class': "sc-bYMpWt"
-                      }
-        self.data2 = {"url": 'https://demo.spribe.io/launch/aviator?currency=USD&lang=ru',
-                      'driver': self.driver2,
-                      'proccess': 'AVIATOR:',
-                      "selenium_class": 'payouts-block',
-                      'soup_tag': 'app-payout-item',
-                      'soup_class': "payout ng-star-inserted"
-                      }
+        self.data = {"url": 'https://lucky-jet-b.1play.one/?exitUrl=null&language=ru&b=demo',
+                     "selenium_class": 'sc-iTFTee',
+                     'soup_tag': 'div',
+                     'soup_class': "sc-bYMpWt"
+                     }
 
     async def get_content(self, **kwargs):
 
         self.options = '--disable-blink-features=AutomationControlled'
-        driver = kwargs.get('driver')
 
-        driver.get(kwargs.get('url'))
+        self.driver.get(kwargs.get('url'))
         await asyncio.sleep(5)
 
         last_index: str = ''
 
         while True:
-            driver.find_elements(By.CLASS_NAME, kwargs.get('selenium_class'))
+            self.driver.find_elements(By.CLASS_NAME, kwargs.get('selenium_class'))
             await asyncio.sleep(2)
 
-            html = driver.page_source
-            soup = BeautifulSoup(html, 'lxml')
-            result = soup.find_all(kwargs.get('soup_tag'), class_=kwargs.get('soup_class'))
+            html: str = self.driver.page_source
+            soup: BeautifulSoup = BeautifulSoup(html, 'lxml')
+            result: list = soup.find_all(kwargs.get('soup_tag'), class_=kwargs.get('soup_class'))
 
             first = result[0]
-            current_index = first.text
+            current_index: str = first.text
 
             if current_index != last_index:
                 last_index = current_index
-                print(f'{kwargs.get("proccess")} index: {last_index}')
+                print(last_index)
+                # TODO здесь запись в бд функция
             else:
                 continue
-
-    # async def get_content_aviator(self):
-    #     self.options.add_argument('--disable-blink-features=AutomationControlled')
-    #     self.driver.get(self.URL2)
-    #     await asyncio.sleep(5)
-    #
-    #     last_index: str = ''
-    #     while True:
-    #         self.driver.find_elements(By.CLASS_NAME, )
-    #         await asyncio.sleep(2)
-    #
-    #         html = self.driver.page_source
-    #         soup = BeautifulSoup(html, 'lxml')
-    #         result = soup.find_all('app-payout-item', class_=)
-    #
-    #         first = result[0]
-    #         current_index = first.get_text(strip=True)
-    #
-    #         if current_index != last_index:
-    #             last_index = current_index
-    #             print(f'aviator index: {last_index}')
-    #
-    #         else:
-    #             continue
 
     async def run(self):
 
         try:
-
-            await asyncio.gather(self.get_content(**self.data1), self.get_content(**self.data2))
-
-            # await self.get_content(**data)
-            # await self.get_content_luckyjet()
-            print('----------')
+            # await asyncio.gather(self.get_content(**self.data1), self.get_content(**self.data2))
+            await self.get_content(**self.data)
         except Exception as e:
             print(e)
         finally:
