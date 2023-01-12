@@ -9,7 +9,7 @@ from keyboards.on_click_funcs import CreatorGroup, AdminGroup
 
 @dp.message_handler(IsAdmin(), IsRegistered(), Command('menu'))
 async def admin_start_with_deeplink(message: types.Message, dialog_manager: DialogManager):
-    await dialog_manager.dialog().show()
+
 
     await dialog_manager.start(AdminGroup.OwnMenu, mode=StartMode.RESET_STACK)
 
